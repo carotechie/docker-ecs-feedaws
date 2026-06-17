@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>¿Qué hay de nuevo en AWS?</title>
+  <style>
+    /* ── Variables ──────────────────────────────────────────── */
+    :root {
+      --bg:          #0f1117;
+      --surface:     #1a1d27;
+      --surface2:    #22263a;
+      --border:      #2e3250;
+      --text:        #e8eaf0;
+      --text-muted:  #8892a4;
+      --accent:      #ff9900;
+      --accent2:     #ffb84d;
+      --card-hover:  #252940;
+      --tag-bg:      #1e2235;
+      --shadow:      0 4px 24px rgba(0,0,0,.45);
+    }
+    [data-theme="light"] {
+      --bg:         #f0f2f7;
+      --surface:    #ffffff;
+      --surface2:   #e8edf5;
+      --border:     #d0d7e6;
+      --text:       #1a1d27;
+      --text-muted: #5a6278;
+      --accent:     #c97000;
+      --accent2:    #e88a00;
+      --card-hover: #eef1f9;
+      --tag-bg:     #e0e5f0;
+      --shadow:     0 4px 24px rgba(0,0,0,.10);
+    }
+
+    /* ── Reset / Base ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      transition: background .3s, color .3s;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 24px 32px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+    .header-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-icon {
+      width: 40px; height: 40px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255,153,0,.4); }
+      50%       { box-shadow: 0 0 0 10px rgba(255,153,0,0); }
+    }
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1.2;
+    }
+    h1 span { color: var(--text); font-weight: 400; font-size: .95rem; display: block; }
+
+    .header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+    /* ── Theme toggle ────────────────────────────────────────── */
+    .theme-btn {
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-size: .85rem;
+      color: var(--text);
+      display: flex; align-items: center; gap: 6px;
+      transition: background .2s, border-color .2s;
+      white-space: nowrap;
+    }
+    .theme-btn:hover { background: var(--surface2); border-color: var(--accent); }
+
+    /* ── Update badge ────────────────────────────────────────── */
+    .update-badge {
+      font-size: .78rem;
+      color: var(--text-muted);
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 12px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .dot {
+      width: 7px; height: 7px;
+      background: #22c55e;
+      border-radius: 50%;
+      animation: blink 1.6s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: .2; }
+    }
+
+    /* ── Filter pills ─────────────────────────────────────────── */
+    .filters {
+      max-width: 960px;
+      margin: 20px auto 8px;
+      padding: 0 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .pill {
+      border: 1px solid var(--border);
+      background: var(--tag-bg);
+      color: var(--text-muted);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: .8rem;
+      cursor: pointer;
+      transition: all .2s;
+      user-select: none;
+    }
+    .pill:hover, .pill.active {
+      background: var(--accent);
+      color: #111;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* ── Count bar ───────────────────────────────────────────── */
+    .count-bar {
+      max-width: 960px;
+      margin: 0 auto 12px;
+      padding: 0 16px;
+      font-size: .82rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Grid ────────────────────────────────────────────────── */
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 16px 40px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    /* ── Card ────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: transform .25s ease, background .25s, box-shadow .25s;
+      animation: fadeUp .45s ease both;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--cat-color, var(--accent));
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      background: var(--card-hover);
+      box-shadow: var(--shadow);
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    /* stagger */
+    .card:nth-child(1)  { animation-delay: .04s; }
+    .card:nth-child(2)  { animation-delay: .08s; }
+    .card:nth-child(3)  { animation-delay: .12s; }
+    .card:nth-child(4)  { animation-delay: .16s; }
+    .card:nth-child(5)  { animation-delay: .20s; }
+    .card:nth-child(6)  { animation-delay: .24s; }
+    .card:nth-child(7)  { animation-delay: .28s; }
+    .card:nth-child(8)  { animation-delay: .32s; }
+    .card:nth-child(9)  { animation-delay: .36s; }
+    .card:nth-child(10) { animation-delay: .40s; }
+
+    /* ── Category tag ────────────────────────────────────────── */
+    .cat-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      padding: 3px 10px;
+      border-radius: 20px;
+      color: #fff;
+      width: fit-content;
+    }
+
+    /* ── Title ───────────────────────────────────────────────── */
+    .card-title {
+      font-size: .97rem;
+      font-weight: 600;
+      line-height: 1.4;
+      color: var(--text);
+      transition: color .2s;
+    }
+    .card:hover .card-title { color: var(--accent2); }
+
+    /* ── Summary ─────────────────────────────────────────────── */
+    .card-summary {
+      font-size: .83rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      flex: 1;
+    }
+
+    /* ── Footer meta ─────────────────────────────────────────── */
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+    }
+    .card-date {
+      font-size: .73rem;
+      color: var(--text-muted);
+    }
+    .card-relative {
+      font-size: .73rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .read-link {
+      font-size: .76rem;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      padding: 3px 9px;
+      transition: background .2s, color .2s;
+      white-space: nowrap;
+    }
+    .read-link:hover { background: var(--accent); color: #111; }
+
+    /* ── Empty state ─────────────────────────────────────────── */
+    .empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    /* ── Footer ──────────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: .75rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────── -->
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">🚀</div>
+      <h1>
+        ¿Qué hay de nuevo en AWS?
+        <span>Últimas novedades del ecosistema</span>
+      </h1>
+    </div>
+    <div class="header-right">
+      <div class="update-badge">
+        <span class="dot"></span>
+        Actualizado {{ fetched_at }}
+      </div>
+      <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">
+        🌙 Modo oscuro
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ── Category filters ─────────────────────────────────────── -->
+<div class="filters" id="filters">
+  <span class="pill active" data-cat="all" onclick="filter(this)">🌐 Todas</span>
+  <span class="pill" data-cat="AI / ML"   onclick="filter(this)">🤖 AI / ML</span>
+  <span class="pill" data-cat="Seguridad" onclick="filter(this)">🔒 Seguridad</span>
+  <span class="pill" data-cat="Data"      onclick="filter(this)">🗄️ Data</span>
+  <span class="pill" data-cat="FinOps"    onclick="filter(this)">💰 FinOps</span>
+  <span class="pill" data-cat="CloudOps"  onclick="filter(this)">☁️ CloudOps</span>
+  <span class="pill" data-cat="General"   onclick="filter(this)">🔧 General</span>
+</div>
+
+<div class="count-bar" id="count-bar"></div>
+
+<!-- ── Cards ────────────────────────────────────────────────── -->
+<main id="grid">
+  {% for item in items %}
+  <article class="card" data-cat="{{ item.category }}"
+           style="--cat-color: {{ item.cat_color }}">
+    <span class="cat-tag" style="background: {{ item.cat_color }}">
+      {{ item.cat_badge }} {{ item.category }}
+    </span>
+
+    <div class="card-title">{{ item.title }}</div>
+
+    <p class="card-summary">{{ item.summary }}{% if item.summary %}…{% endif %}</p>
+
+    <div class="card-footer">
+      <div>
+        {% if item.relative %}
+          <div class="card-relative">{{ item.relative }}</div>
+        {% endif %}
+        <div class="card-date">{{ item.published }}</div>
+      </div>
+      <a class="read-link" href="{{ item.link }}" target="_blank" rel="noopener">
+        Leer →
+      </a>
+    </div>
+  </article>
+  {% else %}
+  <div class="empty">No se pudieron cargar las novedades. Intenta más tarde.</div>
+  {% endfor %}
+</main>
+
+<footer>
+  Feed actualizado en cada petición &middot; Docker + ECS demo &middot;
+  Fuente: <a href="https://aws.amazon.com/about-aws/whats-new/" target="_blank" style="color:var(--accent)">aws.amazon.com</a>
+</footer>
+
+<script>
+  /* ── Theme ─────────────────────────────────────────── */
+  const html = document.documentElement;
+  const btn  = document.getElementById('theme-btn');
+
+  function applyTheme(t) {
+    html.setAttribute('data-theme', t);
+    btn.textContent = t === 'dark' ? '☀️ Modo claro' : '🌙 Modo oscuro';
+    localStorage.setItem('theme', t);
+  }
+
+  function toggleTheme() {
+    applyTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  }
+
+  // Restore saved preference
+  const saved = localStorage.getItem('theme');
+  if (saved) applyTheme(saved);
+  else applyTheme('dark');
+
+  /* ── Filter ─────────────────────────────────────────── */
+  const cards   = document.querySelectorAll('.card');
+  const countEl = document.getElementById('count-bar');
+
+  function updateCount(visible) {
+    countEl.textContent = `Mostrando ${visible} publicación${visible !== 1 ? 'es' : ''}`;
+  }
+
+  function filter(pill) {
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    const cat = pill.dataset.cat;
+    let visible = 0;
+    cards.forEach(c => {
+      const show = cat === 'all' || c.dataset.cat === cat;
+      c.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    updateCount(visible);
+  }
+
+  updateCount(cards.length);
+</script>
+</body>
+</html>
